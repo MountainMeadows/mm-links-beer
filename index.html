@@ -3,21 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mountain Meadows Links</title>
+  <title>Mountain Meadows $1 Beer</title>
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NDEN16QSD9"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-K59GC179ML');
+    gtag('config', 'G-XXXXXXXXXX');
   </script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -33,9 +30,9 @@
     }
 
     .container {
-      max-width: 700px;
+      max-width: 720px;
       width: 100%;
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255,255,255,0.12);
       backdrop-filter: blur(8px);
       border-radius: 20px;
       padding: 40px 24px;
@@ -43,33 +40,36 @@
     }
 
     h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-size: clamp(2rem, 5vw, 3.4rem);
       line-height: 1.15;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     p {
-      font-size: 1.1rem;
-      margin-bottom: 32px;
-      opacity: 0.95;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      margin: 10px 0 20px;
     }
 
     .buttons {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
       align-items: center;
+      margin-top: 24px;
     }
 
     .btn {
       display: inline-block;
       width: 100%;
-      max-width: 340px;
-      padding: 16px 22px;
+      max-width: 360px;
+      padding: 16px 20px;
       border-radius: 12px;
       text-decoration: none;
       font-weight: bold;
       font-size: 1rem;
+      border: none;
+      cursor: pointer;
       transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
@@ -88,17 +88,74 @@
       color: #222;
     }
 
+    .claim {
+      background: #0b2e13;
+      color: white;
+    }
+
+    .claim:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .status {
+      margin-top: 18px;
+      font-size: 1rem;
+      opacity: 0.95;
+    }
+
+    .code-box {
+      margin-top: 24px;
+      padding: 22px;
+      background: rgba(255,255,255,0.14);
+      border-radius: 16px;
+    }
+
+    .code {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 14px 18px;
+      background: white;
+      color: #0f5132;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    .steps {
+      margin-top: 18px;
+      font-size: 0.98rem;
+      opacity: 0.95;
+    }
+
+    .done {
+      text-decoration: line-through;
+      opacity: 0.9;
+    }
+
     .small {
       margin-top: 24px;
-      font-size: 0.9rem;
-      opacity: 0.85;
+      font-size: 0.88rem;
+      opacity: 0.82;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>You are that much closer to a $1 beer 🍺</h1>
-    <p>Follow us on Instagram and leave us a review.</p>
+    <p>Follow us on Instagram and leave us a Google review to unlock your one-time promo code.</p>
+
+    <div class="steps">
+      <div id="stepInstagram">1. Visit Instagram</div>
+      <div id="stepReviews">2. Visit Reviews</div>
+      <div id="stepClaim">3. Claim your code</div>
+    </div>
 
     <div class="buttons">
       <a
@@ -106,7 +163,7 @@
         href="https://www.instagram.com/mountainmeadowsgc?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
         target="_blank"
         rel="noopener noreferrer"
-        onclick="trackClick('Instagram Button', 'Instagram')"
+        onclick="handleInstagramClick()"
       >
         Visit Mountain Meadows Instagram
       </a>
@@ -116,27 +173,165 @@
         href="https://www.google.com/search?q=mountain+meadows+google+reviews&rlz=1C5BAPC_enUS1176"
         target="_blank"
         rel="noopener noreferrer"
-        onclick="trackClick('Reviews Button', 'Google Reviews')"
+        onclick="handleReviewsClick()"
       >
         Visit Mountain Meadows Reviews
       </a>
+
+      <button id="claimBtn" class="btn claim" onclick="claimCode()" disabled>
+        Claim My One-Time Code
+      </button>
+    </div>
+
+    <div id="statusText" class="status">
+      Complete steps 1 and 2 to unlock your code.
+    </div>
+
+    <div id="codeArea" class="code-box hidden">
+      <div id="claimHeader"><strong>Your one-time code is ready</strong></div>
+      <div class="code" id="promoCode"></div>
+      <p id="claimMessage">Show this code to staff. This device has already claimed its offer.</p>
     </div>
 
     <div class="small">
-      Mountain Meadows Golf Course
+      Limit one code per device/browser on this page.
     </div>
   </div>
 
   <script>
-    function trackClick(buttonName, destination) {
+    const STORAGE_KEYS = {
+      instagram: 'mm_instagram_clicked',
+      reviews: 'mm_reviews_clicked',
+      claimed: 'mm_offer_claimed',
+      code: 'mm_offer_code'
+    };
+
+    function trackEvent(eventName, details = {}) {
       if (typeof gtag === 'function') {
-        gtag('event', 'click', {
-          event_category: 'Button',
-          event_label: buttonName,
-          destination: destination
-        });
+        gtag('event', eventName, details);
       }
     }
+
+    function getUTMSource() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('utm_source') || 'unknown';
+    }
+
+    function markStepComplete(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('done');
+    }
+
+    function generateCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let result = 'MM-';
+      for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    function updateClaimButton() {
+      const instagramDone = localStorage.getItem(STORAGE_KEYS.instagram) === 'true';
+      const reviewsDone = localStorage.getItem(STORAGE_KEYS.reviews) === 'true';
+      const alreadyClaimed = localStorage.getItem(STORAGE_KEYS.claimed) === 'true';
+
+      if (instagramDone) markStepComplete('stepInstagram');
+      if (reviewsDone) markStepComplete('stepReviews');
+      if (alreadyClaimed) markStepComplete('stepClaim');
+
+      const claimBtn = document.getElementById('claimBtn');
+      const statusText = document.getElementById('statusText');
+
+      if (alreadyClaimed) {
+        claimBtn.disabled = true;
+        statusText.textContent = 'This device already claimed the offer.';
+        showSavedCode();
+        return;
+      }
+
+      if (instagramDone && reviewsDone) {
+        claimBtn.disabled = false;
+        statusText.textContent = 'Nice — your one-time code is unlocked.';
+      } else {
+        claimBtn.disabled = true;
+        statusText.textContent = 'Complete steps 1 and 2 to unlock your code.';
+      }
+    }
+
+    function showSavedCode() {
+      const code = localStorage.getItem(STORAGE_KEYS.code);
+      if (!code) return;
+
+      document.getElementById('promoCode').textContent = code;
+      document.getElementById('codeArea').classList.remove('hidden');
+      document.getElementById('claimHeader').innerHTML = '<strong>Code already claimed</strong>';
+      document.getElementById('claimMessage').textContent = 'This browser already claimed this offer. Show this same code to staff.';
+    }
+
+    function handleInstagramClick() {
+      localStorage.setItem(STORAGE_KEYS.instagram, 'true');
+      markStepComplete('stepInstagram');
+
+      trackEvent('click_instagram', {
+        event_category: 'Promo',
+        event_label: 'Instagram Button',
+        qr_source: getUTMSource()
+      });
+
+      setTimeout(updateClaimButton, 150);
+    }
+
+    function handleReviewsClick() {
+      localStorage.setItem(STORAGE_KEYS.reviews, 'true');
+      markStepComplete('stepReviews');
+
+      trackEvent('click_reviews', {
+        event_category: 'Promo',
+        event_label: 'Reviews Button',
+        qr_source: getUTMSource()
+      });
+
+      setTimeout(updateClaimButton, 150);
+    }
+
+    function claimCode() {
+      const instagramDone = localStorage.getItem(STORAGE_KEYS.instagram) === 'true';
+      const reviewsDone = localStorage.getItem(STORAGE_KEYS.reviews) === 'true';
+      const alreadyClaimed = localStorage.getItem(STORAGE_KEYS.claimed) === 'true';
+
+      if (alreadyClaimed) {
+        showSavedCode();
+        return;
+      }
+
+      if (!instagramDone || !reviewsDone) {
+        alert('Please complete steps 1 and 2 first.');
+        return;
+      }
+
+      const code = generateCode();
+
+      localStorage.setItem(STORAGE_KEYS.claimed, 'true');
+      localStorage.setItem(STORAGE_KEYS.code, code);
+
+      markStepComplete('stepClaim');
+
+      document.getElementById('promoCode').textContent = code;
+      document.getElementById('codeArea').classList.remove('hidden');
+      document.getElementById('claimHeader').innerHTML = '<strong>Your one-time code is ready</strong>';
+      document.getElementById('claimMessage').textContent = 'Show this code to staff. This device cannot claim another one on this browser.';
+
+      trackEvent('claim_code', {
+        event_category: 'Promo',
+        event_label: code,
+        qr_source: getUTMSource()
+      });
+
+      updateClaimButton();
+    }
+
+    updateClaimButton();
   </script>
 </body>
 </html>
