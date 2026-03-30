@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mountain Meadows $1 Beer</title>
 
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NDEN16QSD9"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -47,7 +48,6 @@
 
     p {
       font-size: 1.05rem;
-      line-height: 1.5;
       margin: 10px 0 20px;
     }
 
@@ -60,278 +60,145 @@
     }
 
     .btn {
-      display: inline-block;
       width: 100%;
       max-width: 360px;
-      padding: 16px 20px;
+      padding: 16px;
       border-radius: 12px;
-      text-decoration: none;
       font-weight: bold;
-      font-size: 1rem;
       border: none;
       cursor: pointer;
-      transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      opacity: 0.95;
-    }
-
-    .instagram {
-      background: #ffffff;
-      color: #198754;
-    }
-
-    .reviews {
-      background: #ffd54f;
-      color: #222;
-    }
-
-    .claim {
-      background: #0b2e13;
-      color: white;
-    }
+    .instagram { background: white; color: #198754; }
+    .reviews { background: #ffd54f; color: #222; }
+    .claim { background: #0b2e13; color: white; }
 
     .claim:disabled {
-      opacity: 0.55;
+      opacity: 0.5;
       cursor: not-allowed;
-      transform: none;
     }
 
-    .hidden {
-      display: none;
-    }
-
-    .status {
-      margin-top: 18px;
-      font-size: 1rem;
-      opacity: 0.95;
-    }
+    .hidden { display: none; }
 
     .code-box {
       margin-top: 24px;
-      padding: 22px;
-      background: rgba(255,255,255,0.14);
+      padding: 20px;
+      background: rgba(255,255,255,0.15);
       border-radius: 16px;
     }
 
     .code {
-      display: inline-block;
       margin-top: 10px;
-      padding: 14px 18px;
+      padding: 12px;
       background: white;
       color: #0f5132;
-      border-radius: 12px;
       font-size: 1.5rem;
       font-weight: bold;
-      letter-spacing: 1px;
-    }
-
-    .steps {
-      margin-top: 18px;
-      font-size: 0.98rem;
-      opacity: 0.95;
-    }
-
-    .done {
-      text-decoration: line-through;
-      opacity: 0.9;
+      border-radius: 10px;
     }
 
     .small {
       margin-top: 24px;
-      font-size: 0.88rem;
-      opacity: 0.82;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    .done {
+      text-decoration: line-through;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>You are that much closer to a $1 beer 🍺</h1>
-    <p>Follow us on Instagram and leave us a Google review to unlock your one-time promo code.</p>
 
-    <div class="steps">
-      <div id="stepInstagram">1. Visit Instagram</div>
-      <div id="stepReviews">2. Visit Reviews</div>
-      <div id="stepClaim">3. Claim your code</div>
-    </div>
+<div class="container">
+  <h1>You are that much closer to a $1 beer 🍺</h1>
+  <p>Follow us on Instagram and leave a review to unlock your code.</p>
 
-    <div class="buttons">
-      <a
-        class="btn instagram"
-        href="https://www.instagram.com/mountainmeadowsgc?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
-        target="_blank"
-        rel="noopener noreferrer"
-        onclick="handleInstagramClick()"
-      >
-        Visit Mountain Meadows Instagram
-      </a>
+  <div id="stepInstagram">1. Visit Instagram</div>
+  <div id="stepReviews">2. Visit Reviews</div>
 
-      <a
-        class="btn reviews"
-        href="https://www.google.com/search?q=mountain+meadows+google+reviews&rlz=1C5BAPC_enUS1176"
-        target="_blank"
-        rel="noopener noreferrer"
-        onclick="handleReviewsClick()"
-      >
-        Visit Mountain Meadows Reviews
-      </a>
+  <div class="buttons">
+    <a class="btn instagram"
+       href="https://www.instagram.com/mountainmeadowsgc"
+       target="_blank"
+       onclick="clickIG()">
+       Instagram
+    </a>
 
-      <button id="claimBtn" class="btn claim" onclick="claimCode()" disabled>
-        Claim My One-Time Code
-      </button>
-    </div>
+    <a class="btn reviews"
+       href="https://www.google.com/search?q=mountain+meadows+google+reviews"
+       target="_blank"
+       onclick="clickReviews()">
+       Reviews
+    </a>
 
-    <div id="statusText" class="status">
-      Complete steps 1 and 2 to unlock your code.
-    </div>
-
-    <div id="codeArea" class="code-box hidden">
-      <div id="claimHeader"><strong>Your one-time code is ready</strong></div>
-      <div class="code" id="promoCode"></div>
-      <p id="claimMessage">Show this code to staff. This device has already claimed its offer.</p>
-    </div>
-
-    <div class="small">
-  Limit one code per device.
-</div>
+    <button id="claimBtn" class="btn claim" onclick="claimCode()" disabled>
+      Claim Code
+    </button>
   </div>
 
-  <script>
-    const STORAGE_KEYS = {
-      instagram: 'mm_instagram_clicked',
-      reviews: 'mm_reviews_clicked',
-      claimed: 'mm_offer_claimed',
-      code: 'mm_offer_code'
-    };
+  <div id="codeBox" class="code-box hidden">
+    <div>Your code:</div>
+    <div id="code" class="code"></div>
+  </div>
 
-    function trackEvent(eventName, details = {}) {
-      if (typeof gtag === 'function') {
-        gtag('event', eventName, details);
-      }
+  <div class="small">
+    Limit one code per device.
+  </div>
+</div>
+
+<script>
+  function generateCode() {
+    const number = Math.floor(100 + Math.random() * 900);
+    return "MM-" + number;
+  }
+
+  function clickIG() {
+    localStorage.setItem("ig", "true");
+    document.getElementById("stepInstagram").classList.add("done");
+    update();
+  }
+
+  function clickReviews() {
+    localStorage.setItem("rev", "true");
+    document.getElementById("stepReviews").classList.add("done");
+    update();
+  }
+
+  function update() {
+    const ig = localStorage.getItem("ig") === "true";
+    const rev = localStorage.getItem("rev") === "true";
+    const claimed = localStorage.getItem("claimed") === "true";
+
+    if (ig && rev && !claimed) {
+      document.getElementById("claimBtn").disabled = false;
     }
 
-    function getUTMSource() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('utm_source') || 'unknown';
+    if (claimed) {
+      showSaved();
     }
+  }
 
-    function markStepComplete(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('done');
-    }
+  function claimCode() {
+    const code = generateCode();
 
-    function generateCode() {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let result = 'MM-';
-      for (let i = 0; i < 6; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return result;
-    }
+    localStorage.setItem("claimed", "true");
+    localStorage.setItem("code", code);
 
-    function updateClaimButton() {
-      const instagramDone = localStorage.getItem(STORAGE_KEYS.instagram) === 'true';
-      const reviewsDone = localStorage.getItem(STORAGE_KEYS.reviews) === 'true';
-      const alreadyClaimed = localStorage.getItem(STORAGE_KEYS.claimed) === 'true';
+    document.getElementById("code").innerText = code;
+    document.getElementById("codeBox").classList.remove("hidden");
+  }
 
-      if (instagramDone) markStepComplete('stepInstagram');
-      if (reviewsDone) markStepComplete('stepReviews');
-      if (alreadyClaimed) markStepComplete('stepClaim');
+  function showSaved() {
+    const code = localStorage.getItem("code");
+    if (!code) return;
 
-      const claimBtn = document.getElementById('claimBtn');
-      const statusText = document.getElementById('statusText');
+    document.getElementById("code").innerText = code;
+    document.getElementById("codeBox").classList.remove("hidden");
+  }
 
-      if (alreadyClaimed) {
-        claimBtn.disabled = true;
-        statusText.textContent = 'This device already claimed the offer.';
-        showSavedCode();
-        return;
-      }
+  update();
+</script>
 
-      if (instagramDone && reviewsDone) {
-        claimBtn.disabled = false;
-        statusText.textContent = 'Nice — your one-time code is unlocked.';
-      } else {
-        claimBtn.disabled = true;
-        statusText.textContent = 'Complete steps 1 and 2 to unlock your code.';
-      }
-    }
-
-    function showSavedCode() {
-      const code = localStorage.getItem(STORAGE_KEYS.code);
-      if (!code) return;
-
-      document.getElementById('promoCode').textContent = code;
-      document.getElementById('codeArea').classList.remove('hidden');
-      document.getElementById('claimHeader').innerHTML = '<strong>Code already claimed</strong>';
-      document.getElementById('claimMessage').textContent = 'This browser already claimed this offer. Show this same code to staff.';
-    }
-
-    function handleInstagramClick() {
-      localStorage.setItem(STORAGE_KEYS.instagram, 'true');
-      markStepComplete('stepInstagram');
-
-      trackEvent('click_instagram', {
-        event_category: 'Promo',
-        event_label: 'Instagram Button',
-        qr_source: getUTMSource()
-      });
-
-      setTimeout(updateClaimButton, 150);
-    }
-
-    function handleReviewsClick() {
-      localStorage.setItem(STORAGE_KEYS.reviews, 'true');
-      markStepComplete('stepReviews');
-
-      trackEvent('click_reviews', {
-        event_category: 'Promo',
-        event_label: 'Reviews Button',
-        qr_source: getUTMSource()
-      });
-
-      setTimeout(updateClaimButton, 150);
-    }
-
-    function claimCode() {
-      const instagramDone = localStorage.getItem(STORAGE_KEYS.instagram) === 'true';
-      const reviewsDone = localStorage.getItem(STORAGE_KEYS.reviews) === 'true';
-      const alreadyClaimed = localStorage.getItem(STORAGE_KEYS.claimed) === 'true';
-
-      if (alreadyClaimed) {
-        showSavedCode();
-        return;
-      }
-
-      if (!instagramDone || !reviewsDone) {
-        alert('Please complete steps 1 and 2 first.');
-        return;
-      }
-
-      const code = generateCode();
-
-      localStorage.setItem(STORAGE_KEYS.claimed, 'true');
-      localStorage.setItem(STORAGE_KEYS.code, code);
-
-      markStepComplete('stepClaim');
-
-      document.getElementById('promoCode').textContent = code;
-      document.getElementById('codeArea').classList.remove('hidden');
-      document.getElementById('claimHeader').innerHTML = '<strong>Your one-time code is ready</strong>';
-      document.getElementById('claimMessage').textContent = 'Show this code to staff. This device cannot claim another one on this browser.';
-
-      trackEvent('claim_code', {
-        event_category: 'Promo',
-        event_label: code,
-        qr_source: getUTMSource()
-      });
-
-      updateClaimButton();
-    }
-
-    updateClaimButton();
-  </script>
 </body>
 </html>
