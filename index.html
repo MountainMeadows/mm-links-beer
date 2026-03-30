@@ -49,6 +49,7 @@
     p {
       font-size: 1.05rem;
       margin: 10px 0 20px;
+      line-height: 1.5;
     }
 
     .buttons {
@@ -65,8 +66,17 @@
       padding: 16px;
       border-radius: 12px;
       font-weight: bold;
+      font-size: 1rem;
       border: none;
       cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+      display: inline-block;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      opacity: 0.95;
     }
 
     .instagram { background: white; color: #198754; }
@@ -76,6 +86,7 @@
     .claim:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+      transform: none;
     }
 
     .hidden { display: none; }
@@ -89,12 +100,13 @@
 
     .code {
       margin-top: 10px;
-      padding: 12px;
+      padding: 12px 16px;
       background: white;
       color: #0f5132;
       font-size: 1.5rem;
       font-weight: bold;
       border-radius: 10px;
+      display: inline-block;
     }
 
     .small {
@@ -105,6 +117,18 @@
 
     .done {
       text-decoration: line-through;
+      opacity: 0.9;
+    }
+
+    .steps {
+      margin-top: 10px;
+      line-height: 1.8;
+    }
+
+    .today-tag {
+      margin-top: 10px;
+      font-size: 0.95rem;
+      opacity: 0.9;
     }
   </style>
 </head>
@@ -114,22 +138,27 @@
   <h1>You are that much closer to a $1 beer 🍺</h1>
   <p>Follow us on Instagram and leave a review to unlock your code.</p>
 
-  <div id="stepInstagram">1. Visit Instagram</div>
-  <div id="stepReviews">2. Visit Reviews</div>
+  <div class="steps">
+    <div id="stepInstagram">1. Visit Instagram</div>
+    <div id="stepReviews">2. Visit Reviews</div>
+    <div id="stepClaim">3. Claim Code</div>
+  </div>
 
   <div class="buttons">
     <a class="btn instagram"
-       href="https://www.instagram.com/mountainmeadowsgc"
+       href="https://www.instagram.com/mountainmeadowsgc?igsh=NTc4MTIwNjQ2YQ%3D%3D&utm_source=qr"
        target="_blank"
+       rel="noopener noreferrer"
        onclick="clickIG()">
-       Instagram
+       Visit Mountain Meadows Instagram
     </a>
 
     <a class="btn reviews"
-       href="https://www.google.com/search?q=mountain+meadows+google+reviews"
+       href="https://www.google.com/search?q=mountain+meadows+google+reviews&rlz=1C5BAPC_enUS1176"
        target="_blank"
+       rel="noopener noreferrer"
        onclick="clickReviews()">
-       Reviews
+       Visit Mountain Meadows Reviews
     </a>
 
     <button id="claimBtn" class="btn claim" onclick="claimCode()" disabled>
@@ -137,9 +166,14 @@
     </button>
   </div>
 
+  <div id="statusText" style="margin-top:18px;">
+    Complete steps 1 and 2 to unlock your code.
+  </div>
+
   <div id="codeBox" class="code-box hidden">
-    <div>Your code:</div>
+    <div id="codeHeader"><strong>Your code:</strong></div>
     <div id="code" class="code"></div>
+    <div id="todayTag" class="today-tag"></div>
   </div>
 
   <div class="small">
@@ -148,9 +182,26 @@
 </div>
 
 <script>
+  function pad(num) {
+    return String(num).padStart(2, '0');
+  }
+
+  function getTodayKey() {
+    const now = new Date();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    return `${month}${day}`; // ex: 0330
+  }
+
+  function getTodayDisplay() {
+    const now = new Date();
+    return now.toLocaleDateString();
+  }
+
   function generateCode() {
+    const today = getTodayKey();
     const number = Math.floor(100 + Math.random() * 900);
-    return "MM-" + number;
+    return `MM${today}-${number}`;
   }
 
   function clickIG() {
@@ -172,29 +223,70 @@
 
     if (ig && rev && !claimed) {
       document.getElementById("claimBtn").disabled = false;
+      document.getElementById("statusText").innerText = "Your code is ready to claim.";
+    }
+
+    if (!ig || !rev) {
+      document.getElementById("statusText").innerText = "Complete steps 1 and 2 to unlock your code.";
     }
 
     if (claimed) {
       showSaved();
+      document.getElementById("claimBtn").disabled = true;
+      document.getElementById("stepClaim").classList.add("done");
+      document.getElementById("statusText").innerText = "This device already claimed a code.";
     }
   }
 
   function claimCode() {
+    const ig = localStorage.getItem("ig") === "true";
+    const rev = localStorage.getItem("rev") === "true";
+
+    if (!ig || !rev) {
+      alert("Please complete steps 1 and 2 first.");
+      return;
+    }
+
     const code = generateCode();
+    const today = getTodayKey();
 
     localStorage.setItem("claimed", "true");
     localStorage.setItem("code", code);
+    localStorage.setItem("claimDate", today);
 
+    document.getElementById("stepClaim").classList.add("done");
     document.getElementById("code").innerText = code;
+    document.getElementById("todayTag").innerText = "Valid today only: " + getTodayDisplay();
     document.getElementById("codeBox").classList.remove("hidden");
+    document.getElementById("statusText").innerText = "Show this code to staff today.";
+
+    if (typeof gtag === 'function') {
+      gtag('event', 'claim_code', {
+        event_category: 'Promo',
+        event_label: code
+      });
+    }
+
+    update();
   }
 
   function showSaved() {
     const code = localStorage.getItem("code");
+    const claimDate = localStorage.getItem("claimDate");
+    const today = getTodayKey();
+
     if (!code) return;
 
     document.getElementById("code").innerText = code;
     document.getElementById("codeBox").classList.remove("hidden");
+
+    if (claimDate === today) {
+      document.getElementById("codeHeader").innerHTML = "<strong>Your code:</strong>";
+      document.getElementById("todayTag").innerText = "Valid today only: " + getTodayDisplay();
+    } else {
+      document.getElementById("codeHeader").innerHTML = "<strong>Expired code:</strong>";
+      document.getElementById("todayTag").innerText = "This code was from a previous day and should not be accepted.";
+    }
   }
 
   update();
